@@ -1,0 +1,16 @@
+
+**.h5
+**.prototxt
+**.caffemodel
+**.pb
+**.data-00000-of-00001
+*.index
+**.tflite
+**.weights
+**.mpg
+**.mp4
+**.jpg
+**.png
+**.txt
+**.xml
+*.env

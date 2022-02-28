@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS systems(
+	id BIGSERIAL PRIMARY KEY,
+	cameras INTEGER NOT NULL,
+    link TEXT NOT NULL,
+	model TEXT NOT NULL,
+	UNIQUE (link)
+);
+
+CREATE TABLE IF NOT EXISTS detections (
+	id BIGSERIAL PRIMARY KEY,
+    system BIGINT NOT NULL,
+	camera INTEGER NOT NULL,
+	model TEXT NOT NULL,
+	detection_time TIMESTAMP NOT NULL,
+	image TEXT NOT NULL,
+    movement BOOLEAN NOT NULL,
+    person BOOLEAN NOT NULL,
+	validated BOOLEAN DEFAULT false,
+    FOREIGN KEY (system) REFERENCES systems(id) ON DELETE CASCADE
+);
