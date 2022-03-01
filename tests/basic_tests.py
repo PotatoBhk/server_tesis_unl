@@ -1,4 +1,5 @@
 from enum import Enum
+import datetime
 #test tuples
 # var_tuple = (1, "hi", "npi")
 # print(var_tuple[2])
@@ -16,3 +17,14 @@ class Shake(Enum):
     MINT = 3
 
 print(Shake(7) is Shake.YOLOv4Tiny)
+
+test = {
+    "name": "test" 
+}
+
+print(test["name"])
+
+today = datetime.datetime.now()
+print(today.date())
+print(today.time())
+print(today.timestamp())

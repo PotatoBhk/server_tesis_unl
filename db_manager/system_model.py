@@ -18,7 +18,7 @@ class System():
             
             try:            
                 cur = db_manager.cursor()
-                cur.execute(sql_add_system, (self.cameras,self.link,self.model))
+                cur.execute(sql_add_system, (self.name, self.cameras,self.link,self.model))
                 system = cur.fetchone()
                 self._serialize(system)
                 db_manager.commit()    
@@ -38,7 +38,7 @@ class System():
             
             try:            
                 cur = db_manager.cursor()
-                cur.execute(sql_update_system, (self.cameras,self.link,self.model, self.id))
+                cur.execute(sql_update_system, (self.name, self.cameras,self.link,self.model, self.id))
                 system = cur.fetchone()
                 self._serialize(system)
                 db_manager.commit()    
@@ -51,7 +51,7 @@ class System():
             return None
     
     def get_all_systems(self, db_manager):
-        list_systems = os.path.join(self.sql_folder, "list_system.sql")
+        list_systems = os.path.join(self.sql_folder, "list_systems.sql")
         with open(list_systems, 'r') as f:
             sql_list_systems = f.read()
             
@@ -64,7 +64,7 @@ class System():
             systems_json = list()
             for system in systems:
                 self._serialize(system)
-                systems_json.append(self._data_to_json())
+                systems_json.append(self._to_json())
             return systems_json
         except DatabaseError as error:
             print("Error en la base de datos: ", error)
@@ -72,13 +72,15 @@ class System():
         
     def _serialize(self, data):
         self.id = data[0]
-        self.cameras = data[1]
-        self.link = data[2]
-        self.model = data[3]
+        self.name = data[1]
+        self.cameras = data[2]
+        self.link = data[3]
+        self.model = data[4]
     
     def _json_to_data(self, json):
         try:
             self.id = json["id"]
+            self.name = json["name"]
             self.cameras = json["cameras"]
             self.link = json["link"]
             self.model = json["model"]
@@ -89,13 +91,26 @@ class System():
     def _data_to_json(self):
         return jsonify({
             "id": self.id,
+            "name": self.name,
             "cameras": self.cameras,
             "link": self.link,
             "model": self.model
         })
+    
+    def _to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "cameras": self.cameras,
+            "link": self.link,
+            "model": self.model 
+        }
         
     def get_id(self):
         return self.id
+    
+    def get_name(self):
+        return self.name
     
     def get_cameras(self):
         return self.cameras

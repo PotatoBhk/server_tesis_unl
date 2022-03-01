@@ -63,13 +63,15 @@ def init_connect():
     #Start the random number generator thread only if the thread has not been started before.
     if not thread.is_alive():
         system = System()
-        systems = system.get_all_systems(database)
+        systems = system.get_all_systems(database.get_connection())
         number_transmition = 1
         for system in systems:
             for i in range(system["cameras"]):
-                video_streaming = VideoStreaming(socketio, thread_stop_event, system["link"], number_transmition)
-                number_transmition = number_transmition + 1
+                video_streaming = VideoStreaming(socketio, thread_stop_event, system, number_transmition, i)
+                # video_streaming.set_database_manager(database.get_connection())              
                 # video_streaming.init_connection_to_ctv()
+                # video_streaming.init_model_detection()
+                number_transmition = number_transmition + 1
                 print("Starting Thread")
                 thread = socketio.start_background_task(video_streaming.randomNumberGenerator)
 

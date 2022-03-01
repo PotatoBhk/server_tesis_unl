@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS systems(
 	id BIGSERIAL PRIMARY KEY,
+	name TEXT NOT NULL,
 	cameras INTEGER NOT NULL,
     link TEXT NOT NULL,
 	model INTEGER NOT NULL,
-	UNIQUE (link)
+	UNIQUE (name)
 );
 
 CREATE TABLE IF NOT EXISTS detections (

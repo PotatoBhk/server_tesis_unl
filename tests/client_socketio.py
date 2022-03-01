@@ -10,9 +10,13 @@ f = open("sample.jpg", "wb")
 def connect():
     print("I'm connected!")
 
-@sio.on('newnumber')
+@sio.on('newnumber1')
 def on_message(data):
-    print(data)
+    print("number 1: ", data)
+
+@sio.on('newnumber2')
+def on_message(data):
+    print("number 2: ", data)
 
 @sio.on('video')
 def handle_video(data):
