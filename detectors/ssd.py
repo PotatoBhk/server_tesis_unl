@@ -61,8 +61,8 @@ class SSD():
         self._format_time = time.time() - start_time
         return class_ids, scores, x_points, y_points
 
-    def postprocess(self, frame, out, resized_shape = (300, 300)):
-        class_ids, scores, x_points, y_points = out
+    def postprocess(self, frame, outs, resized_shape = (300, 300)):
+        class_ids, scores, x_points, y_points = outs
 
         heightFactor = frame.shape[0]/resized_shape[0] 
         widthFactor = frame.shape[1]/resized_shape[1]

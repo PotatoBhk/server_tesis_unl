@@ -31,7 +31,7 @@ class System():
             return None
     
     def update_system(self, json, db_manager):
-        if self._json_to_data(json):        
+        if not self._json_to_data(json):        
             update_system = os.path.join(self.sql_folder, "update_system.sql")
             with open(update_system, 'r') as f:
                 sql_update_system = f.read()
@@ -48,6 +48,26 @@ class System():
                 print("Error en la base de datos: ", error)
                 return None
         else:
+            return None
+    
+    def get_all_systems(self, db_manager):
+        list_systems = os.path.join(self.sql_folder, "list_system.sql")
+        with open(list_systems, 'r') as f:
+            sql_list_systems = f.read()
+            
+        try:
+            cur = db_manager.cursor()
+            cur.execute(sql_list_systems)
+            systems = cur.fetchall()
+            cur.close()
+            
+            systems_json = list()
+            for system in systems:
+                self._serialize(system)
+                systems_json.append(self._data_to_json())
+            return systems_json
+        except DatabaseError as error:
+            print("Error en la base de datos: ", error)
             return None
         
     def _serialize(self, data):

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS systems(
 	id BIGSERIAL PRIMARY KEY,
 	cameras INTEGER NOT NULL,
     link TEXT NOT NULL,
-	model TEXT NOT NULL,
+	model INTEGER NOT NULL,
 	UNIQUE (link)
 );
 

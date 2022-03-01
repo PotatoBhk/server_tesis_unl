@@ -66,7 +66,11 @@ class Detection():
     def _data_to_json(self):
         return jsonify({
             "id": self.id,
-            "cameras": self.cameras,
-            "link": self.link,
-            "model": self.model
+            "system": self.system,
+            "camera": self.camera,
+            "model": self.model,
+            "detection_time": self.detection_time,
+            "image": self.image,
+            "movement": self.movement,
+            "person": self.person
         })

@@ -18,55 +18,60 @@ database = None
 
 @app.route("/api/add_system", methods=['POST'])
 def add_system():       
-        content = request.json
-        system = System()
-        response = system.add_system(content, database.get_connection())
-        if response != None:
-            return response
-        else:
-            if system.error:                
-                return "Malformed JSON", 400
-            else:                
-                return "Data not found. Check log for more information", 500
+    content = request.json
+    system = System()
+    response = system.add_system(content, database.get_connection())
+    if response != None:
+        return response
+    else:
+        if system.error:                
+            return "Malformed JSON", 400
+        else:                
+            return "Data not found. Check log for more information", 500
 
 @app.route("/api/update_system", methods=['POST'])
 def update_system():       
-        content = request.json
-        system = System()
-        response = system.update_system(content, database.get_connection())
-        if response != None:
-            return response
-        else:
-            if system.error:                
-                return "Malformed JSON", 400
-            else:                
-                return "Data not found. Check log for more information", 500
+    content = request.json
+    system = System()
+    response = system.update_system(content, database.get_connection())
+    if response != None:
+        return response
+    else:
+        if system.error:                
+            return "Malformed JSON", 400
+        else:                
+            return "Data not found. Check log for more information", 500
 
-@app.route("/api/add_detection", methods=['POST'])
+@app.route("/api/add_detection", methods=['POST']) #Borrar 
 def add_detection():       
-        content = request.json
-        detection = Detection()
-        response = detection.add_detection(content, database.get_connection())
-        if response != None:
-            return response
-        else:
-            if detection.error:                
-                return "Malformed JSON", 400
-            else:                
-                return "Data not found. Check log for more information", 500
+    content = request.json
+    detection = Detection()
+    response = detection.add_detection(content, database.get_connection())
+    if response != None:
+        return response
+    else:
+        if detection.error:                
+            return "Malformed JSON", 400
+        else:                
+            return "Data not found. Check log for more information", 500
 
 @socketio.on('connect')
-def test_connect():
+def init_connect():
     # need visibility of the global thread object
     global thread
     print('Client connected')
-
     #Start the random number generator thread only if the thread has not been started before.
     if not thread.is_alive():
-        video_streaming = VideoStreaming(socketio, thread_stop_event)
-        # video_streaming.init_connection_to_ctv()
-        print("Starting Thread")
-        thread = socketio.start_background_task(video_streaming.randomNumberGenerator)
+        system = System()
+        systems = system.get_all_systems(database)
+        number_transmition = 1
+        for system in systems:
+            for i in range(system["cameras"]):
+                video_streaming = VideoStreaming(socketio, thread_stop_event, system["link"], number_transmition)
+                number_transmition = number_transmition + 1
+                # video_streaming.init_connection_to_ctv()
+                print("Starting Thread")
+                thread = socketio.start_background_task(video_streaming.randomNumberGenerator)
 
 @socketio.on('disconnect')
 def test_disconnect():
