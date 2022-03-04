@@ -28,3 +28,7 @@ today = datetime.datetime.now()
 print(today.date())
 print(today.time())
 print(today.timestamp())
+
+import multiprocessing 
+ 
+print(multiprocessing.cpu_count())

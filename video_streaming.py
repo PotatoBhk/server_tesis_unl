@@ -32,7 +32,7 @@ class VideoStreaming():
         self.transmition = transmition
         self.camera = camera
         self.utils = Utils()
-        self.thread = Thread()
+        # self.thread = Thread()
         self.database = None
         self.image_root = self.utils.join_path(root, "images")
              
@@ -61,8 +61,7 @@ class VideoStreaming():
         while not self.thread_stop_event.is_set():
             start_time = time.time()
             frame = self.source.read()
-            if frame is not None:
-                start_time = time.time()
+            if frame is not None:                
                 #Movement detection                
                 if(self._movement_detection(frame) > 0):
                     #Object detection
@@ -75,17 +74,17 @@ class VideoStreaming():
                         self.ssd.postprocess(frame, outs)                        
                     self.socket.emit('detection{tr}'.format(tr=self.transmition), 
                                      {"movement": True, "detection": (len(outs[0])>0)})
-                    if not self.thread.is_alive():
-                        self.thread = Thread(target=self._save_detection, args=({
-                           "system": self.system.id,
-                           "camera": self.camera,
-                           "model": self.model.name,
-                           "detection_time": datetime.datetime.now(),
-                           "image": frame,
-                           "movement": True,
-                           "person": (len(outs[0])>0)
-                        },))
-                        self.thread.start()
+                    # if not self.thread.is_alive():
+                    #     self.thread = Thread(target=self._save_detection, args=({
+                    #        "system": self.system["id"],
+                    #        "camera": self.camera,
+                    #        "model": self.model.name,
+                    #        "detection_time": datetime.datetime.now(),
+                    #        "image": frame,
+                    #        "movement": True,
+                    #        "person": (len(outs[0])>0)
+                    #     },))
+                    #     self.thread.start()
                 else:
                     self.socket.emit('detection{tr}'.format(tr=self.transmition),
                                      {"movement": False, "detection": False})
@@ -94,19 +93,13 @@ class VideoStreaming():
                 cv.putText(frame, "FPS: " + str(frames), (15, 15),
                     cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
                 print("FPS: ", frames)
-                #Image to bytes transformation
+                #Image to bytes transformation                
                 img_bytes = cv.imencode('.jpg', frame)[1].tobytes()
                 self.socket.emit('video{tr}'.format(tr=self.transmition), img_bytes)
                 print("Image sent - Init: ", init)
                 init = init + 1
                 print("Tiempo estimado: ", ((time.time() - start_time)))
-                self.socket.sleep(5)
-            else:
-                if(self.time < 10):
-                    time.sleep(2)
-                    self.time = self.time + 2
-                else:
-                    break
+                self.socket.sleep(0)
         self.source.close()
         
     def _movement_detection(self, frame):
@@ -124,7 +117,7 @@ class VideoStreaming():
     
     def _save_detection(self, data):
         today = datetime.datetime.now()
-        name = str(today.date()) + "_" + str(today.time()) + "_" + self.system.get_name() + "_camera" + self.camera + ".png"
+        name = str(today.date()) + "_" + str(today.time()) + "_" + self.system["name"] + "_camera" + str(self.camera) + ".png"
         save = self.utils.join_path(self.image_root, name)
         try:
             cv.imwrite(save, data["image"])
@@ -146,4 +139,4 @@ class VideoStreaming():
             number = round(random()*10, 3)
             print(number)
             self.socket.emit('newnumber{tr}'.format(tr=self.transmition), str(number))
-            self.socket.sleep(5)
+            self.socket.sleep(0)

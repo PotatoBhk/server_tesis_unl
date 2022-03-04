@@ -18,7 +18,7 @@ def on_message(data):
 def on_message(data):
     print("number 2: ", data)
 
-@sio.on('video')
+@sio.on('video1')
 def handle_video(data):
     image = np.asarray(bytearray(data), dtype="uint8")
     img = cv2.imdecode(image, cv2.IMREAD_COLOR)
