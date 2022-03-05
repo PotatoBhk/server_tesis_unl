@@ -93,8 +93,13 @@ class VideoStreaming():
                 cv.putText(frame, "FPS: " + str(frames), (15, 15),
                     cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
                 print("FPS: ", frames)
-                #Image to bytes transformation                
-                img_bytes = cv.imencode('.jpg', frame)[1].tobytes()
+                #Image to bytes transformation
+                scale_percent = 50 # percent of original size
+                width = int(frame.shape[1] * scale_percent / 100)
+                height = int(frame.shape[0] * scale_percent / 100)
+                dim = (width, height)
+                resized = cv.resize(frame, dim, interpolation = cv.INTER_AREA)              
+                img_bytes = cv.imencode('.jpg', resized)[1].tobytes()
                 self.socket.emit('video{tr}'.format(tr=self.transmition), img_bytes)
                 print("Image sent - Init: ", init)
                 init = init + 1
