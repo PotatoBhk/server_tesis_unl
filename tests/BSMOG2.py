@@ -38,7 +38,7 @@ while True:
     
     imageArea = frame.shape[0] * frame.shape[1]
     
-    result = list(map(lambda x: cv.contourArea(x) > (imageArea*0.001), cnts))   
+    result = list(map(lambda x: cv.contourArea(x) > (imageArea*0.005), cnts))   
     index = np.argwhere(result) 
     
     if(len(index)>0):

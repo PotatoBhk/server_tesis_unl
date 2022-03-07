@@ -32,9 +32,10 @@ class VideoStreaming():
         self.transmition = transmition
         self.camera = camera
         self.utils = Utils()
-        # self.thread = Thread()
+        self.thread = Thread()
         self.database = None
         self.image_root = self.utils.join_path(root, "images")
+        self.frames_processed = 0
              
         
     def init_connection_to_ctv(self):        
@@ -43,16 +44,17 @@ class VideoStreaming():
     
     def init_model_detection(self):
         self.model = Model(self.system["model"])
-        root = os.path.dirname(__file__)
+        self.root = os.path.dirname(__file__)
         self.backSub = cv.createBackgroundSubtractorKNN()
         if(self.model is Model.YOLOv4Tiny):
-            sources = self.utils.join_path(root,"models/yolo")
+            sources = self.utils.join_path(self.root,"models/yolo")
             self.yolo = Yolo(root = sources)
             self.yolo.set_weights("pretrained_yolov4-tiny.weights")
             self.yolo.set_configFile("pretrained_yolov4-tiny.cfg")
+            self.yolo.set_confThreshold(0.55)
             self.yolo.initModel()
         elif(self.model is Model.SDD):
-            sources = self.utils.join_path(root,"models/ssd")
+            sources = self.utils.join_path(self.root,"models/ssd")
             self.ssd = SSD(root = sources)
             self.ssd.init_model()
 
@@ -74,17 +76,21 @@ class VideoStreaming():
                         self.ssd.postprocess(frame, outs)                        
                     self.socket.emit('detection{tr}'.format(tr=self.transmition), 
                                      {"movement": True, "detection": (len(outs[0])>0)})
-                    # if not self.thread.is_alive():
-                    #     self.thread = Thread(target=self._save_detection, args=({
-                    #        "system": self.system["id"],
-                    #        "camera": self.camera,
-                    #        "model": self.model.name,
-                    #        "detection_time": datetime.datetime.now(),
-                    #        "image": frame,
-                    #        "movement": True,
-                    #        "person": (len(outs[0])>0)
-                    #     },))
-                    #     self.thread.start()
+                    if (not self.thread.is_alive()) and self.frames_processed > 100:
+                        self.frames_processed = 0
+                        self.thread = Thread(target=self._save_detection, args=({
+                            "id": 0,
+                            "system": self.system["id"],
+                            "camera": self.camera,
+                            "model": self.model.name,
+                            "detection_time": datetime.datetime.now(),
+                            "image": frame,
+                            "movement": True,
+                            "person": (len(outs[0])>0)
+                        },))
+                        self.thread.start()
+                    else:
+                        self.frames_processed = self.frames_processed + 1
                 else:
                     self.socket.emit('detection{tr}'.format(tr=self.transmition),
                                      {"movement": False, "detection": False})
@@ -94,7 +100,7 @@ class VideoStreaming():
                     cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
                 print("FPS: ", frames)
                 #Image to bytes transformation
-                scale_percent = 50 # percent of original size
+                scale_percent = 60 # percent of original size
                 width = int(frame.shape[1] * scale_percent / 100)
                 height = int(frame.shape[0] * scale_percent / 100)
                 dim = (width, height)
@@ -113,7 +119,7 @@ class VideoStreaming():
         cnts = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)                
         imageArea = frame.shape[0] * frame.shape[1]                
-        result = list(map(lambda x: cv.contourArea(x) > (imageArea*0.001), cnts))   
+        result = list(map(lambda x: cv.contourArea(x) > (imageArea*0.005), cnts))   
         index = np.argwhere(result)
         return len(index)
     
@@ -122,20 +128,27 @@ class VideoStreaming():
     
     def _save_detection(self, data):
         today = datetime.datetime.now()
-        name = str(today.date()) + "_" + str(today.time()) + "_" + self.system["name"] + "_camera" + str(self.camera) + ".png"
-        save = self.utils.join_path(self.image_root, name)
+        name = str(today.date()) + "_" + str(today.time()).replace('.','-').replace(':','-') + "_" + self.system["name"] + "_camera" + str(self.camera) + ".png"
+        # save = self.utils.join_path(self.image_root, name)
         try:
-            cv.imwrite(save, data["image"])
+            os.chdir(self.image_root)
+            cv.imwrite(name, data["image"])
+            os.chdir(self.root)
+            # img_bytes = cv.imencode('.png', data["image"])[1].tobytes()
+            # f = open(name, "wb")
+            # f.write(img_bytes)
+            # f.close()
             data["image"] = name
             detection = Detection()
             if detection.add_detection(data, self.database) is None:
-                time.sleep(2)
+                # time.sleep(2)
                 print("Detection not added")
             else:
-                time.sleep(15)
-        except:
+                # time.sleep(15)
+                print("Added..")
+        except Exception as err:
             print("Image not written to root folder")
-            time.sleep(2)
+            print(err)
     
     def randomNumberGenerator(self):
         #infinite loop of magical random numbers
