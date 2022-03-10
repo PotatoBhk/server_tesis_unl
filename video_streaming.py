@@ -1,3 +1,4 @@
+from charset_normalizer import detect
 from imutils.video import VideoStream
 from random import random
 from enum import Enum, unique
@@ -16,9 +17,9 @@ import os
 
 @unique
 class Model(Enum):
-    YOLOv4 = 1
-    YOLOv4Tiny = 2
-    SDD = 3
+    PRETRAINED_YOLOV4 = 1
+    PRETRAINED_YOLOV4_TINY = 2
+    CUSTOM_YOLOV4_TINY = 3
 
 class VideoStreaming():    
     
@@ -45,18 +46,13 @@ class VideoStreaming():
     def init_model_detection(self):
         self.model = Model(self.system["model"])
         self.root = os.path.dirname(__file__)
-        self.backSub = cv.createBackgroundSubtractorKNN()
-        if(self.model is Model.YOLOv4Tiny):
-            sources = self.utils.join_path(self.root,"models/yolo")
-            self.yolo = Yolo(root = sources)
-            self.yolo.set_weights("pretrained_yolov4-tiny.weights")
-            self.yolo.set_configFile("pretrained_yolov4-tiny.cfg")
-            self.yolo.set_confThreshold(0.55)
-            self.yolo.initModel()
-        elif(self.model is Model.SDD):
-            sources = self.utils.join_path(self.root,"models/ssd")
-            self.ssd = SSD(root = sources)
-            self.ssd.init_model()
+        self.backSub = cv.createBackgroundSubtractorKNN(history=200, detectShadows=False)
+        sources = self.utils.join_path(self.root,"models/yolo")
+        self.yolo = Yolo(root = sources)
+        self.yolo.set_weights(self.model.name + ".weights")
+        self.yolo.set_configFile(self.model.name + ".cfg")
+        self.yolo.set_confThreshold(0.55)
+        self.yolo.initModel()
 
     def stream(self):
         init = 1
@@ -67,13 +63,8 @@ class VideoStreaming():
                 #Movement detection                
                 if(self._movement_detection(frame) > 0):
                     #Object detection
-                    if(self.model is Model.YOLOv4Tiny):
-                        outs = self.yolo.detect(frame)
-                        self.yolo.post_process(outs,frame)
-                    elif(self.model is Model.SDD):
-                        detections = self.ssd.detect(frame)
-                        outs = self.ssd.format_output(detections)
-                        self.ssd.postprocess(frame, outs)                        
+                    outs = self.yolo.detect(frame)
+                    self.yolo.post_process(outs,frame)                      
                     self.socket.emit('detection{tr}'.format(tr=self.transmition), 
                                      {"movement": True, "detection": (len(outs[0])>0)})
                     if (not self.thread.is_alive()) and self.frames_processed > 100:
@@ -107,6 +98,8 @@ class VideoStreaming():
                 resized = cv.resize(frame, dim, interpolation = cv.INTER_AREA)              
                 img_bytes = cv.imencode('.jpg', resized)[1].tobytes()
                 self.socket.emit('video{tr}'.format(tr=self.transmition), img_bytes)
+                if len(outs[0])>0:
+                    self.socket.emit('detected', img_bytes)
                 print("Image sent - Init: ", init)
                 init = init + 1
                 print("Tiempo estimado: ", ((time.time() - start_time)))
@@ -116,7 +109,7 @@ class VideoStreaming():
     def _movement_detection(self, frame):
         fgMask = self.backSub.apply(frame)    
         thresh = cv.dilate(fgMask, None, iterations=2)    
-        cnts = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)
+        cnts = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)                
         imageArea = frame.shape[0] * frame.shape[1]                
         result = list(map(lambda x: cv.contourArea(x) > (imageArea*0.005), cnts))   
@@ -134,17 +127,11 @@ class VideoStreaming():
             os.chdir(self.image_root)
             cv.imwrite(name, data["image"])
             os.chdir(self.root)
-            # img_bytes = cv.imencode('.png', data["image"])[1].tobytes()
-            # f = open(name, "wb")
-            # f.write(img_bytes)
-            # f.close()
             data["image"] = name
             detection = Detection()
             if detection.add_detection(data, self.database) is None:
-                # time.sleep(2)
                 print("Detection not added")
             else:
-                # time.sleep(15)
                 print("Added..")
         except Exception as err:
             print("Image not written to root folder")

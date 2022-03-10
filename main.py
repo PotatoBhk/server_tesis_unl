@@ -15,6 +15,10 @@ thread_stop_event = Event()
 
 database = None
 
+@app.route("/")
+def hello_world():
+    return "<p>Hello, World!</p>"
+
 @app.route("/api/add_system", methods=['POST'])
 def add_system():       
     content = request.json
@@ -84,5 +88,5 @@ def handle_message(data):
 if __name__ == '__main__':
     database = Database()
     if(database.init_db()):
-        socketio.run(app)
+        socketio.run(app, host="0.0.0.0")
         database.close()
