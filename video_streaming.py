@@ -2,10 +2,8 @@ from charset_normalizer import detect
 from imutils.video import VideoStream
 from random import random
 from enum import Enum, unique
-from flask import jsonify
 from detectors.utils import Utils
 from detectors.yolov4 import Yolo
-from detectors.ssd import SSD
 from db_manager.detections_model import  Detection
 from threading import Thread
 import imutils
@@ -14,12 +12,14 @@ import cv2 as cv
 import time
 import datetime
 import os
+import random
 
 @unique
 class Model(Enum):
     PRETRAINED_YOLOV4 = 1
     PRETRAINED_YOLOV4_TINY = 2
     CUSTOM_YOLOV4_TINY = 3
+    CUSTOM_YOLOV4_TINY2 = 4
 
 class VideoStreaming():    
     
@@ -36,8 +36,8 @@ class VideoStreaming():
         self.thread = Thread()
         self.database = None
         self.image_root = self.utils.join_path(root, "images")
-        self.frames_processed = 0
-             
+        self.detected = False
+        self.wait_time = datetime.datetime.now()           
         
     def init_connection_to_ctv(self):        
         url = self.system["link"].format(ch = self.transmition)
@@ -51,7 +51,7 @@ class VideoStreaming():
         self.yolo = Yolo(root = sources)
         self.yolo.set_weights(self.model.name + ".weights")
         self.yolo.set_configFile(self.model.name + ".cfg")
-        self.yolo.set_confThreshold(0.55)
+        self.yolo.set_confThreshold(0.60)
         self.yolo.initModel()
 
     def stream(self):
@@ -67,21 +67,7 @@ class VideoStreaming():
                     self.yolo.post_process(outs,frame)                      
                     self.socket.emit('detection{tr}'.format(tr=self.transmition), 
                                      {"movement": True, "detection": (len(outs[0])>0)})
-                    if (not self.thread.is_alive()) and self.frames_processed > 100:
-                        self.frames_processed = 0
-                        self.thread = Thread(target=self._save_detection, args=({
-                            "id": 0,
-                            "system": self.system["id"],
-                            "camera": self.camera,
-                            "model": self.model.name,
-                            "detection_time": datetime.datetime.now(),
-                            "image": frame,
-                            "movement": True,
-                            "person": (len(outs[0])>0)
-                        },))
-                        self.thread.start()
-                    else:
-                        self.frames_processed = self.frames_processed + 1
+                    self._process_detection(frame, outs)
                 else:
                     self.socket.emit('detection{tr}'.format(tr=self.transmition),
                                      {"movement": False, "detection": False})
@@ -119,8 +105,29 @@ class VideoStreaming():
     def set_database_manager(self, database):
         self.database = database
     
+    def _process_detection(self, frame, outs):
+        elapsed_time = datetime.datetime.now()
+
+        if not self.detected:
+            self.detected = True
+            self.wait_time = elapsed_time + datetime.timedelta(seconds=10)
+        
+        if (not self.thread.is_alive()) and elapsed_time > self.wait_time:
+            self.detected = False
+            self.thread = Thread(target=self._save_detection, args=({
+                "id": 0,
+                "system": self.system["id"],
+                "camera": self.camera,
+                "model": self.model.name,
+                "detection_time": elapsed_time,
+                "image": frame,
+                "movement": True,
+                "person": (len(outs[0])>0)
+            },))
+            self.thread.start()
+
     def _save_detection(self, data):
-        today = datetime.datetime.now()
+        today = data["detection_time"]
         name = str(today.date()) + "_" + str(today.time()).replace('.','-').replace(':','-') + "_" + self.system["name"] + "_camera" + str(self.camera) + ".png"
         # save = self.utils.join_path(self.image_root, name)
         try:

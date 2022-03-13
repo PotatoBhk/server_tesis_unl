@@ -1,5 +1,7 @@
 from enum import Enum
 import datetime
+import time
+import random
 #test tuples
 # var_tuple = (1, "hi", "npi")
 # print(var_tuple[2])
@@ -25,10 +27,22 @@ test = {
 print(test["name"])
 
 today = datetime.datetime.now()
-print(today.date())
-print(today.time())
-print(today.timestamp())
+hour = datetime.timedelta(minutes=1)
+later = today + hour
+
+time_now = time.time()
+print(today)
+print(later)
+print(today>later)
+print(time_now)
 
 import multiprocessing 
  
 print(multiprocessing.cpu_count())
+
+random_number = random.randint(1, 10)
+print(random_number)
+
+elements = ["a", "b", "c"]
+for i in range(len(elements)):
+    print(i)
