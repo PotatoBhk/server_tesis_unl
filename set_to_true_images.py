@@ -24,11 +24,10 @@ try:
       img = cv.imread(path)
       cv.imshow("frame", img)
       cv.waitKey(0)
-      if keyboard.read_key() == "p":
-        cur.execute("DELETE FROM detections WHERE image='{}';".format(image))
-        os.remove(path)
-        print("removed: " + image)
-        conn.commit()    
+      if keyboard.read_key() == "t":
+        cur.execute("UPDATE detections SET validated=true WHERE image='{}';".format(image))
+        print("updated: " + image)
+        conn.commit()
     cur.close() 
     conn.close()
 except psycopg2.DatabaseError as error:

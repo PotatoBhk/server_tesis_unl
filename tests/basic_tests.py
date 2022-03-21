@@ -2,6 +2,7 @@ from enum import Enum
 import datetime
 import time
 import random
+import keyboard
 #test tuples
 # var_tuple = (1, "hi", "npi")
 # print(var_tuple[2])
@@ -46,3 +47,6 @@ print(random_number)
 elements = ["a", "b", "c"]
 for i in range(len(elements)):
     print(i)
+
+if keyboard.is_pressed("p"):
+    print("hi")

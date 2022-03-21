@@ -1,0 +1,10 @@
+opencv-python==4.5
+imutils==0.5.4
+numpy==1.22
+scikit-image==0.19.2
+enum==0.4.7
+functools==0.5
+Flask-SocketIO==5.1.1
+gevent==21.12 
+eventlet==0.33.0.0
+psycopg2==2.9.3

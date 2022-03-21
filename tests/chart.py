@@ -6,7 +6,7 @@ import random
 
 root = os.path.dirname(__file__)
 main = os.path.join(root, "..")
-folder = os.path.realpath("C:/Users/Pumpkin/Documents/TesisPotato/Imagenes/processed/processed/obj")
+folder = os.path.join(main, "images")
 list = os.listdir(folder)
 images = []
 valid_images = [".jpg", ".png"] 

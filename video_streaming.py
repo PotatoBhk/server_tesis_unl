@@ -1,4 +1,3 @@
-from charset_normalizer import detect
 from imutils.video import VideoStream
 from random import random
 from enum import Enum, unique
@@ -67,7 +66,7 @@ class VideoStreaming():
                     self.yolo.post_process(outs,frame)                      
                     self.socket.emit('detection{tr}'.format(tr=self.transmition), 
                                      {"movement": True, "detection": (len(outs[0])>0)})
-                    self._process_detection(frame, outs)
+                    self._process_detection(frame, outs, (len(outs[0])>0))
                 else:
                     self.socket.emit('detection{tr}'.format(tr=self.transmition),
                                      {"movement": False, "detection": False})
@@ -105,14 +104,14 @@ class VideoStreaming():
     def set_database_manager(self, database):
         self.database = database
     
-    def _process_detection(self, frame, outs):
+    def _process_detection(self, frame, outs, detection):
         elapsed_time = datetime.datetime.now()
 
         if not self.detected:
             self.detected = True
             self.wait_time = elapsed_time + datetime.timedelta(seconds=10)
         
-        if (not self.thread.is_alive()) and elapsed_time > self.wait_time:
+        if (not self.thread.is_alive()) and ((elapsed_time > self.wait_time) or detection):
             self.detected = False
             self.thread = Thread(target=self._save_detection, args=({
                 "id": 0,
