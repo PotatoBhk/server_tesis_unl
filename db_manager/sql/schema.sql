@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS detections (
 	model TEXT NOT NULL,
 	detection_time TIMESTAMP NOT NULL,
 	image TEXT NOT NULL,
-    movement BOOLEAN NOT NULL,
     person BOOLEAN NOT NULL,
 	validated BOOLEAN DEFAULT false,
     FOREIGN KEY (system) REFERENCES systems(id) ON DELETE CASCADE
