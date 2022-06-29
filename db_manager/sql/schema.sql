@@ -18,3 +18,11 @@ CREATE TABLE IF NOT EXISTS detections (
 	validated BOOLEAN DEFAULT false,
     FOREIGN KEY (system) REFERENCES systems(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS users (
+	id BIGSERIAL PRIMARY KEY,
+	username TEXT NOT NULL,
+	email TEXT NOT NULL,
+	password TEXT NOT NULL,
+	UNIQUE (username)
+);

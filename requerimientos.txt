@@ -1,4 +1,4 @@
-opencv-python==4.5
+opencv-python==4.5.5.64
 imutils==0.5.4
 numpy==1.22
 scikit-image==0.19.2
@@ -8,3 +8,4 @@ Flask-SocketIO==5.1.1
 gevent==21.12 
 eventlet==0.33.0.0
 psycopg2==2.9.3
+bcrypt==3.2.2
