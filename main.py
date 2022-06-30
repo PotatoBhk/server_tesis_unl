@@ -20,9 +20,10 @@ database = None
 def hello_world():
     return "<p>Hello, World!</p>"
 
-@app.route("/login", methods=['GET'])
+@app.route("/login", methods=['POST'])
 def login():
     content = request.json
+    print(content)
     user = User()
     response = user.validate_user(content, database.get_connection())
     return response

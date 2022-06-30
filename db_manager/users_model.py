@@ -55,8 +55,8 @@ class User():
             if not is_valid:
                 return jsonify({
                     'status': True,
-                    'is_error': False,
-                    'is_valid': is_valid,
+                    'isError': False,
+                    'isValid': is_valid,
                     'message': 'Password incorrect'
                 })
                 
@@ -69,23 +69,23 @@ class User():
             if user_id > 0:
                 return jsonify({
                     'status': True,
-                    'is_error': False,
-                    'is_valid': is_valid,
+                    'isError': False,
+                    'isValid': is_valid,
                     'message': 'Password updated'
                 })
             else:
                 return jsonify({
                     'status': False,
-                    'is_error': True,
-                    'is_valid': is_valid,
+                    'isError': True,
+                    'isValid': is_valid,
                     'message': 'Password not updated, SQL error'
                 })
         except DatabaseError as error:
             print("Error en la base de datos: ", error)
             return jsonify({
                 'status': False,
-                'is_error': True,
-                'is_valid': False,
+                'isError': True,
+                'isValid': False,
                 'message': 'Password not updated, SQL error'
             })
     
@@ -106,20 +106,20 @@ class User():
                 check = bcrypt.checkpw(password, pwd)
                 return jsonify({
                     'status': True,
-                    'is_valid': check,
+                    'isValid': check,
                     'message': 'User validated'
                 })
             except DatabaseError as error:
                 print("Error en la base de datos: ", error)
                 return jsonify({
                     'status': False,
-                    'is_valid': False,
+                    'isValid': False,
                     'message': 'Database error'
                 }) 
         else:
             return jsonify({
                 'status': False,
-                'is_valid': False,
+                'isValid': False,
                 'message': 'Error when deserializing JSON'
             })
     
