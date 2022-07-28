@@ -1,10 +1,13 @@
-from flask import Flask, request, jsonify
+from os import system
+from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO
+from db_manager.detections_model import Detection
 from video_streaming import VideoStreaming
 from threading import Thread, Event
 from db_manager.database import Database
 from db_manager.system_model import  System
 from db_manager.users_model import User
+import os
 # import time
 
 app = Flask(__name__)
@@ -18,7 +21,7 @@ database = None
 
 @app.route("/")
 def hello_world():
-    return "<p>Hello, World!</p>"
+    return "<p>Servidor Trabajando!</p>"
 
 @app.route("/login", methods=['POST'])
 def login():
@@ -86,25 +89,37 @@ def get_systems():
         else:                
             return "Data not found. Check log for more information", 500
 
-# @socketio.on('connect')
-# def init_connect():
-#     # need visibility of the global thread object
-#     global thread
-#     print('Client connected')
-#     #Start the random number generator thread only if the thread has not been started before.
-#     if not thread.is_alive():
-#         system = System()
-#         systems = system.get_all_systems(database.get_connection())
-#         number_transmition = 1
-#         for system in systems:
-#             for i in range(system["cameras"]):
-#                 video_streaming = VideoStreaming(socketio, thread_stop_event, system, number_transmition, (i+1))
-#                 video_streaming.set_database_manager(database.get_connection())              
-#                 video_streaming.init_connection_to_ctv()
-#                 video_streaming.init_model_detection()
-#                 number_transmition = number_transmition + 1
-#                 print("Starting Thread")
-#                 thread = socketio.start_background_task(video_streaming.stream)
+@app.route("/api/get_last_detection", methods=['GET'])
+def get_last_detection():
+    system = Detection()
+    name_image = system.get_last_detection(database.get_connection())
+    if name_image != None:
+        root = os.path.dirname(__file__)
+        folder = os.path.join(root, "images")
+        path = os.path.join(folder, name_image)
+        return send_from_directory(directory=folder, filename=name_image, path=path)
+    else:
+        return "Data not found. Check log for more information", 500
+
+@socketio.on('connect')
+def init_connect():
+    # need visibility of the global thread object
+    global thread
+    print('Client connected')
+    #Start the random number generator thread only if the thread has not been started before.
+    if not thread.is_alive():
+        system = System()
+        systems = system.get_all_systems(database.get_connection())
+        number_transmition = 1
+        for system in systems:
+            for i in range(system["cameras"]):
+                video_streaming = VideoStreaming(socketio, thread_stop_event, system, number_transmition, (i+1))
+                video_streaming.set_database_manager(database.get_connection())              
+                video_streaming.init_connection_to_ctv()
+                video_streaming.init_model_detection()
+                number_transmition = number_transmition + 1
+                print("Starting Thread")
+                thread = socketio.start_background_task(video_streaming.stream)
 
 @socketio.on('disconnect')
 def test_disconnect():

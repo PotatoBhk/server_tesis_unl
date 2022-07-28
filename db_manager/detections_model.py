@@ -1,3 +1,5 @@
+from tokenize import String
+from h11 import Data
 from psycopg2 import DatabaseError
 from flask import jsonify
 import os
@@ -37,6 +39,21 @@ class Detection():
                 print("Error en la base de datos: ", error)
                 return None
         else:
+            return None
+
+    def get_last_detection(self, db_manager):
+        get_detection = os.path.join(self.sql_folder, "get_detection.sql")
+        with open (get_detection, 'r') as f:
+            sql_get_detection = f.read()
+        try:
+            cur = db_manager.cursor()
+            cur.execute(sql_get_detection)
+            result = cur.fetchone()
+            image: str = result[0]
+            cur.close()
+            return image
+        except DatabaseError as error:
+            print("Error en la base de datos: ", error)
             return None
         
     def _serialize(self, data):

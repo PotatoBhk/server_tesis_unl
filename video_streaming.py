@@ -55,9 +55,12 @@ class VideoStreaming():
 
     def stream(self):
         init = 1
-        while not self.thread_stop_event.is_set():
+        while not self.thread_stop_event.is_set():            
             start_time = time.time()
             frame = self.source.read()
+            if init < 100:
+                init = init + 1
+                continue
             if frame is not None:                
                 #Movement detection                
                 if(self._movement_detection(frame) > 0):
@@ -74,9 +77,9 @@ class VideoStreaming():
                 cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
                 cv.putText(frame, "FPS: " + str(frames), (15, 15),
                     cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
-                print("FPS: ", frames)
+                # print("FPS: ", frames)
                 #Image to bytes transformation
-                scale_percent = 60 # percent of original size
+                scale_percent = 40 # percent of original size
                 width = int(frame.shape[1] * scale_percent / 100)
                 height = int(frame.shape[0] * scale_percent / 100)
                 dim = (width, height)
@@ -109,9 +112,10 @@ class VideoStreaming():
 
         if not self.detected:
             self.detected = True
-            self.wait_time = elapsed_time + datetime.timedelta(seconds=10)
+            self.wait_time = elapsed_time + datetime.timedelta(seconds=2)
         
-        if (not self.thread.is_alive()) and ((elapsed_time > self.wait_time) or detection):
+        # if (not self.thread.is_alive()) and ((elapsed_time > self.wait_time) or detection):
+        if detection and (elapsed_time > self.wait_time):
             self.detected = False
             self.thread = Thread(target=self._save_detection, args=({
                 "id": 0,
